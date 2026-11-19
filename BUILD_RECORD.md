@@ -1,51 +1,34 @@
 # Build record — Tiny Chess Engine 02 (make.fun tiny-chess-01)
 
-Measurement method: the kit's grade-local process driver runs node22 bots
-only (Python runs only inside Docker, which is unavailable here), so each
-version is measured by playing the kit's own env server
-(program/env/server.mjs) against the shipped main.py and scoring the
-exported state with the kit's own scorer (program/scorer/score.mjs) on
-practice trial-0 (6 games: depth-2 W, depth-3 B, depth-4 W, nodes-100k B,
-nodes-250k W, nodes-500k B; anchors 855/1073/1199/1392/1497/1596).
-All engines are node-capped, so ratings are hardware-independent except
-for the 10 s/move wall. Perft suite passed before v1 was committed
-(startpos, Kiwipete, en-passant-pin and promotion positions).
+Method: grade-local's process driver runs node22 bots only (Python needs
+Docker, unavailable here), so each version plays the kit's own env server
+(program/env/server.mjs) with the shipped main.py and is scored by the
+kit's own scorer on the practice trials (6 games each: depth-2 W,
+depth-3 B, depth-4 W, nodes-100k B, nodes-250k W, nodes-500k B; anchors
+855/1073/1199/1392/1497/1596). Engines are node-capped, so ratings are
+hardware-independent apart from the 10 s/move wall. Versions are judged
+on the 3-trial mean (identical code spans 350+ points across instances;
+the house baseline itself rates 1364/1451/1279, mean 1365). Perft suite
+(startpos, Kiwipete, en-passant-pin, promotion positions) passed before
+v1 and after every search change.
 
-## v1 — commit 647dfd6
-Design: 0x88 board, negamax alpha-beta with PVS, transposition table,
-null-move pruning (R 2/3), single-step LMR, history ordering, capture
-quiescence with check evasions, check extension, tapered eval (hand-written
-PSTs for P/N/B/K, king endgame table, phase blend), repetition and
-100-ply draw scores in search. Budget 40000 nodes/move, iterative
-deepening stops starting a new depth past half the budget.
-Result trial-0: **Elo 1279** — 2 won, 2 drawn, 2 lost (working 1,
-spare_plies 133). Beat depth-2 (mate) and nodes-100k (mate, as Black);
-drew depth-3 and depth-4 (adjudicated at 200 plies); lost to nodes-250k
-and nodes-500k (mated).
+## v1 — 647dfd6 — trial-0: Elo 1279 (2W 2D 2L)
+0x88 board; negamax alpha-beta + PVS, TT, null-move (R 2/3), 1-ply LMR,
+history ordering, capture quiescence with check evasions, check
+extension, tapered PST eval (P/N/B + king MG/EG tables), repetition and
+100-ply draws in search. Budget 40000, deepening stops past half budget.
 
-## v2 — commit 825fd63
-Change: budget 48000 nodes/move and iterative deepening now always uses
-the full budget (the half-budget brake is gone; a depth that runs past
-the budget is dropped whole and the last completed depth's move stands,
-the same rule the house nodes-* engines use).
-Results: trial-0 **1279** (3W 0D 3L), trial-1 **1451** (4W 0D 2L),
-trial-2 **1099** (2W 0D 4L) — mean **1276**, 9/18 points. The spread
-across instances (352 points for identical code) matches the house
-baseline's own spread on these trials (1364/1451/1279, mean 1365), so
-from here on versions are judged on the 3-trial mean, never one trial.
+## v2 — 825fd63 — 1279 / 1451 / 1099, mean 1276 (9/18)
+Budget 48000, always fully used (an over-budget depth is dropped whole,
+the house nodes-* rule).
 
-## v3 — commit 854a6a7
-Changes: budget 54000, two-tier LMR (2-ply reduction for late moves),
-bishop pair (+/-25) restored. (Late-move pruning was also tried during
-development and rejected before commit: at depth <= 3 it corrupted
-horizon scores, e.g. depth-4 startpos picked 1.Na3.)
-Results: trial-0 **1099** (2W 0D 4L), trial-1 **1279** (3W 0D 3L),
-trial-2 **1279** (2W 2D 2L) — mean **1219**, 8/18 points. Below v2;
-the two-tier LMR is the main suspect, so v4 reverts it.
+## v3 — 854a6a7 — 1099 / 1279 / 1279, mean 1219 (8/18) — not kept
+Budget 54000, two-tier LMR (2-ply for late moves), bishop pair restored.
+Late-move pruning was tried in development and rejected pre-commit: at
+depth <= 3 it corrupted horizon scores (depth-4 startpos picked 1.Na3).
 
-## v4 — this commit
-Changes vs v3: LMR back to a single 1-ply reduction (v2's setting);
-budget 64000; a behaviour-identical speed pass (local board alias in
-the attack test and move ordering, 64-square eval loop) — fixed-depth
-scores, node counts and root moves verified byte-identical before and
-after, and the perft suite re-passed.
+## v4 — c87161c + size fix (this HEAD)
+LMR back to 1-ply (v2's setting; two-tier is the suspect in v3's drop),
+budget 64000, bishop pair kept, behaviour-identical speed pass (local
+board alias in attack test and ordering, 64-square eval loop; fixed-depth
+scores/nodes/root moves verified identical, perft re-passed).
