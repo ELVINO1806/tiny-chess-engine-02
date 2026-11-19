@@ -33,3 +33,19 @@ trial-2 **1099** (2W 0D 4L) — mean **1276**, 9/18 points. The spread
 across instances (352 points for identical code) matches the house
 baseline's own spread on these trials (1364/1451/1279, mean 1365), so
 from here on versions are judged on the 3-trial mean, never one trial.
+
+## v3 — commit 854a6a7
+Changes: budget 54000, two-tier LMR (2-ply reduction for late moves),
+bishop pair (+/-25) restored. (Late-move pruning was also tried during
+development and rejected before commit: at depth <= 3 it corrupted
+horizon scores, e.g. depth-4 startpos picked 1.Na3.)
+Results: trial-0 **1099** (2W 0D 4L), trial-1 **1279** (3W 0D 3L),
+trial-2 **1279** (2W 2D 2L) — mean **1219**, 8/18 points. Below v2;
+the two-tier LMR is the main suspect, so v4 reverts it.
+
+## v4 — this commit
+Changes vs v3: LMR back to a single 1-ply reduction (v2's setting);
+budget 64000; a behaviour-identical speed pass (local board alias in
+the attack test and move ordering, 64-square eval loop) — fixed-depth
+scores, node counts and root moves verified byte-identical before and
+after, and the perft suite re-passed.
