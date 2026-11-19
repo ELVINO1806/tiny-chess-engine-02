@@ -27,8 +27,13 @@ Budget 54000, two-tier LMR (2-ply for late moves), bishop pair restored.
 Late-move pruning was tried in development and rejected pre-commit: at
 depth <= 3 it corrupted horizon scores (depth-4 startpos picked 1.Na3).
 
-## v4 — c87161c + size fix (this HEAD)
-LMR back to 1-ply (v2's setting; two-tier is the suspect in v3's drop),
-budget 64000, bishop pair kept, behaviour-identical speed pass (local
-board alias in attack test and ordering, 64-square eval loop; fixed-depth
-scores/nodes/root moves verified identical, perft re-passed).
+## v4 — c87161c/cc80df4 — 1191 / 1191 / 1279, mean 1220 (8.5/18)
+LMR back to 1-ply, budget 64000, bishop pair kept, behaviour-identical
+speed pass (fixed-depth scores/nodes/root moves verified identical,
+perft re-passed). Also below v2.
+
+## v5 — final HEAD
+v2's measured-best configuration restored (budget 48000, no bishop
+pair; the identical-behaviour speed pass is kept). v2/v3/v4 means
+(1276/1219/1220) are within noise of each other; v2 leads on both mean
+and points, so it stands as the final entry.
