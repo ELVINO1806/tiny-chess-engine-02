@@ -22,3 +22,14 @@ Result trial-0: **Elo 1279** — 2 won, 2 drawn, 2 lost (working 1,
 spare_plies 133). Beat depth-2 (mate) and nodes-100k (mate, as Black);
 drew depth-3 and depth-4 (adjudicated at 200 plies); lost to nodes-250k
 and nodes-500k (mated).
+
+## v2 — commit 825fd63
+Change: budget 48000 nodes/move and iterative deepening now always uses
+the full budget (the half-budget brake is gone; a depth that runs past
+the budget is dropped whole and the last completed depth's move stands,
+the same rule the house nodes-* engines use).
+Results: trial-0 **1279** (3W 0D 3L), trial-1 **1451** (4W 0D 2L),
+trial-2 **1099** (2W 0D 4L) — mean **1276**, 9/18 points. The spread
+across instances (352 points for identical code) matches the house
+baseline's own spread on these trials (1364/1451/1279, mean 1365), so
+from here on versions are judged on the 3-trial mean, never one trial.
